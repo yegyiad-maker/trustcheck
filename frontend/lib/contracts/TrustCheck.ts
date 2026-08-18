@@ -1,6 +1,7 @@
 "use client";
+
 import { createClient } from "genlayer-js";
-import { studionet } from "genlayer-js/chains";
+import { testnetBradbury } from "genlayer-js/chains";
 
 import {
   createWalletClient,
@@ -17,8 +18,8 @@ import {
 } from "@/lib/genlayer/client";
 
 const GENLAYER_CHAIN = {
-  id: 61999,
-  name: "GenLayer Studio",
+  id: 4221,
+  name: "GenLayer Bradbury Testnet",
   nativeCurrency: {
     name: "GEN",
     symbol: "GEN",
@@ -26,7 +27,7 @@ const GENLAYER_CHAIN = {
   },
   rpcUrls: {
     default: {
-      http: ["https://studio.genlayer.com/api"],
+      http: ["https://rpc-bradbury.genlayer.com"],
     },
   },
 } as const;
@@ -106,7 +107,7 @@ export async function getTransactionStatus(
   txHash: string
 ): Promise<{ status: ConsensusStatus }> {
   const response = await fetch(
-    "https://studio.genlayer.com/api",
+    "https://rpc-bradbury.genlayer.com",
     {
       method: "POST",
       headers: {
@@ -170,17 +171,13 @@ export async function getVerificationResult(): Promise<VerificationResult> {
   }
 
   try {
-    const config: any = {
-      chain: studionet,
-    };
+    const rpcUrl =
+      process.env.NEXT_PUBLIC_GENLAYER_RPC_URL ||
+      "https://rpc-bradbury.genlayer.com";
 
-    const studioUrl = process.env.NEXT_PUBLIC_GENLAYER_RPC_URL;
-
-    if (studioUrl) {
-      config.endpoint = studioUrl;
-    }
-
-    const client: any = createClient(config);
+    const client: any = createClient({
+      chain: testnetBradbury,
+    });
 
     const result = await client.readContract({
       address: contractAddress as `0x${string}`,
@@ -194,17 +191,7 @@ export async function getVerificationResult(): Promise<VerificationResult> {
       throw new Error("Unexpected verification result type.");
     }
 
-    const parsed = JSON.parse(result) as VerificationResult;
-
-    if (
-      parsed.verdict !== "TRUE" &&
-      parsed.verdict !== "FALSE" &&
-      parsed.verdict !== "UNCERTAIN"
-    ) {
-      throw new Error("Invalid verification verdict.");
-    }
-
-    return parsed;
+    return JSON.parse(result) as VerificationResult;
   } catch (error) {
     console.error("Failed to read verification result:", error);
     throw new Error("Failed to read verification result.");

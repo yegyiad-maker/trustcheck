@@ -14,20 +14,20 @@ class TrustCheck(gl.Contract):
         self.claim = ""
         self.result = ""
 
-    def _check(self) -> dict:
+    def _check(self, url: str, claim: str) -> dict:
 
         def evaluate():
-            response = gl.nondet.web.get(self.url)
+            response = gl.nondet.web.get(url)
             content = response.body.decode("utf-8")
 
             prompt = f"""
 You are a careful fact-checking assistant.
 
 SOURCE:
-{self.url}
+{url}
 
 CLAIM:
-{self.claim}
+{claim}
 
 WEBPAGE CONTENT:
 {content}
@@ -89,7 +89,7 @@ If there is insufficient evidence, prefer UNCERTAIN.
         self.claim = claim
         self.result = ""
 
-        result = self._check()
+        result = self._check(url, claim)
 
         verdict = str(result.get("verdict", "UNCERTAIN")).upper()
         reason = str(result.get("reason", "No explanation available."))
